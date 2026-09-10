@@ -1,0 +1,30 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: resume-analyzer-api
+    ports:
+      - "8000:8000"
+    environment:
+      DATA_DIR: /app/data
+      ALLOWED_ORIGINS: "http://localhost:8080,http://localhost:3000"
+    volumes:
+      - ./data:/app/data:ro
+    restart: unless-stopped
+
+  web:
+    image: oven/bun:1
+    container_name: resume-analyzer-web
+    working_dir: /app
+    command: sh -c "bun install && bun run dev --host 0.0.0.0 --port 8080"
+    ports:
+      - "8080:8080"
+    environment:
+      VITE_ANALYZER_API_URL: http://localhost:8000
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    restart: unless-stopped
